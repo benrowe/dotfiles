@@ -15,7 +15,25 @@ set -e
 
 if [ -f /etc/debian_version ]; then
   echo_task "ensure required dependencies are installed"
-  sudo apt-get update && sudo apt-get -y install zsh git wget curl && sudo chsh -s /usr/bin/zsh $(whoami)
+  dependencies = ()
+
+  # Function to add dependency if missing
+  install_if_missing() {
+    if ! command -v "$1" >/dev/null; then
+      dependencies+=("$1")
+    else
+      echo_task "$1 is already installed"
+    fi
+  }
+
+  # Check and add dependencies
+  install_if_missing zsh
+  install_if_missing git
+  install_if_missing wget
+  install_if_missing curl
+  echo_task "missing dependencies"
+  echo $dependencies
+  #sudo apt-get update && sudo apt-get -y install zsh git wget curl && sudo chsh -s /usr/bin/zsh $(whoami)
 fi
 
 # Install Chezmoi if not already installed
