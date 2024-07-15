@@ -14,14 +14,42 @@ error() {
 set -e
 
 if [ -f /etc/debian_version ]; then
-  echo_task "ensure required dependencies are installed"
-  sudo apt-get update && sudo apt-get -y install zsh git wget curl && sudo chsh -s /usr/bin/zsh $(whoami)
+  echo_task "Checking and installing required dependencies if missing"
+
+  # Array to store dependencies to be installed
+  dependencies=()
+
+  # Function to add dependency if missing
+  install_if_missing() {
+    if ! command -v "$1" >/dev/null; then
+      dependencies+=("$1")
+    else
+      echo_task "$1 is already installed"
+    fi
+  }
+
+  # Check and add dependencies
+  install_if_missing zsh
+  install_if_missing git
+  install_if_missing wget
+  install_if_missing curl
+
+  # If there are dependencies to install, do it in one go
+  if [ ${#dependencies[@]} -gt 0 ]; then
+    echo_task "Installing missing dependencies: ${dependencies[*]}"
+    sudo apt-get update
+    sudo apt-get -y install "${dependencies[@]}"
+  fi
+
+  # Change shell to zsh
+  echo_task "Changing shell to zsh"
+  sudo chsh -s /usr/bin/zsh $(whoami)
 fi
 
 # Install Chezmoi if not already installed
 if ! chezmoi="$(command -v chezmoi)"; then
   bin_dir="${HOME}/.local/bin"
-  mkdir -p ${bin_dir}
+  mkdir -p "${bin_dir}"
   chezmoi="${bin_dir}/chezmoi"
   echo_task "Installing chezmoi to ${chezmoi}"
   if command -v curl >/dev/null; then
@@ -33,6 +61,11 @@ if ! chezmoi="$(command -v chezmoi)"; then
   fi
   sh -c "${chezmoi_installer}" -- -b "${bin_dir}"
   unset chezmoi_installer bin_dir
+fi
+
+if [ "$(ps -p $$ -o comm=)" = "bash" ]; then
+  echo "Restarting script with zsh..."
+  exec /usr/bin/zsh "$0" "$@"
 fi
 
 chezmoi_args=""
@@ -65,4 +98,3 @@ echo_task "Running chezmoi init"
 
 echo_task "Running chezmoi apply"
 "${chezmoi}" apply ${chezmoi_args}
-
