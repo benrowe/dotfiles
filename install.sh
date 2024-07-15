@@ -13,6 +13,11 @@ error() {
 # -u: exit on unset variables
 set -e
 
+if [ -f /etc/debian_version ]; then
+  echo_task "ensure required dependencies are installed"
+  sudo apt-get update && sudo apt-get -y install zsh git wget curl && sudo chsh -s /usr/bin/zsh $(whoami)
+fi
+
 # Install Chezmoi if not already installed
 if ! chezmoi="$(command -v chezmoi)"; then
   bin_dir="${HOME}/.local/bin"
