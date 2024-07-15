@@ -46,6 +46,11 @@ if [ -f /etc/debian_version ]; then
   sudo chsh -s /usr/bin/zsh $(whoami)
 fi
 
+if [ "$(ps -p $$ -o comm=)" = "bash" ]; then
+  echo "Restarting script with zsh..."
+  exec /usr/bin/zsh "$0" "$@"
+fi
+
 # Install Chezmoi if not already installed
 if ! chezmoi="$(command -v chezmoi)"; then
   bin_dir="${HOME}/.local/bin"
