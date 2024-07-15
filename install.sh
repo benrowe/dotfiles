@@ -63,11 +63,6 @@ if ! chezmoi="$(command -v chezmoi)"; then
   unset chezmoi_installer bin_dir
 fi
 
-if [ "$(ps -p $$ -o comm=)" = "bash" ]; then
-  echo "Restarting script with zsh..."
-  exec /usr/bin/zsh "$0" "$@"
-fi
-
 chezmoi_args=""
 chezmoi_init_args=""
 
