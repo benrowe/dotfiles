@@ -13,32 +13,34 @@ error() {
 # -u: exit on unset variables
 set -e
 
-if [ -f /etc/debian_version ]; then
-  echo_task "ensure required dependencies are installed"
+if [[ "$1" == "--skip" ]]; then
+  echo_task "Skipping initial setup as requested."
+else
 
-  # Function to add dependency if missing
-  install_if_missing() {
-    if ! command -v "$1" >/dev/null; then
-      sudo apt-get -y install $1
-    else
-      echo_task "$1 is already installed"
-    fi
-  }
-
-  # Check and add dependencies
-  install_if_missing zsh
-  install_if_missing git
-  install_if_missing wget
-  install_if_missing curl
-  sudo chsh -s /usr/bin/zsh $(whoami)
+  if [ -f /etc/debian_version ]; then
+    echo_task "ensure required dependencies are installed"
+    # Function to add dependency if missing
+    install_if_missing() {
+      if ! command -v "$1" >/dev/null; then
+        sudo apt-get -y install $1
+      else
+        echo_task "$1 is already installed"
+      fi
+    }
+    # Check and add dependencies
+    install_if_missing zsh
+    install_if_missing git
+    install_if_missing wget
+    install_if_missing curl
+    sudo chsh -s /usr/bin/zsh $(whoami)
+  fi
+  shell=$SHELL
+  if [[ "$shell" == *bash ]]; then
+    echo "Restarting script with zsh..."
+    exec /usr/bin/zsh "$0" "--skip"
+    exit
+  fi
 fi
-
-if [ $SHELL ~= "bash"]; then
-  echo "Restarting script with zsh..."
-  exec /usr/bin/zsh "$0" "$@"
-  exit
-fi
-
 # Install Chezmoi if not already installed
 if ! chezmoi="$(command -v chezmoi)"; then
   bin_dir="${HOME}/.local/bin"
